@@ -1,0 +1,2 @@
+WALLET_LOCATION = (SOURCE = (METHOD = file) (METHOD_DATA = (DIRECTORY="/Users/mac/maryam_DB/dbms_project/Wallet_H7I6S322YA0BT6WW")))
+SSL_SERVER_DN_MATCH=yes

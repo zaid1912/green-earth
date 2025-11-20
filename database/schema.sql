@@ -1,0 +1,253 @@
+-- Environmental Volunteer Management System - Database Schema
+-- Oracle Database
+
+-- Drop existing tables and sequences (for clean setup)
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE EVENT_ATTENDANCE CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE VOLUNTEER_PROJECT CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE RESOURCES CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE EVENTS CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE PROJECTS CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE VOLUNTEERS CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE ORGANIZATIONS CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+-- Drop sequences
+BEGIN
+   EXECUTE IMMEDIATE 'DROP SEQUENCE org_seq';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP SEQUENCE volunteer_seq';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP SEQUENCE project_seq';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP SEQUENCE event_seq';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP SEQUENCE resource_seq';
+EXCEPTION
+   WHEN OTHERS THEN NULL;
+END;
+/
+
+-- Create Sequences for auto-increment IDs
+CREATE SEQUENCE org_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE volunteer_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE project_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE event_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE resource_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- Table 1: ORGANIZATIONS
+CREATE TABLE ORGANIZATIONS (
+    org_id NUMBER PRIMARY KEY,
+    name VARCHAR2(200) NOT NULL,
+    description CLOB,
+    email VARCHAR2(200),
+    phone VARCHAR2(20),
+    address VARCHAR2(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+-- Table 2: VOLUNTEERS
+CREATE TABLE VOLUNTEERS (
+    volunteer_id NUMBER PRIMARY KEY,
+    name VARCHAR2(200) NOT NULL,
+    email VARCHAR2(200) UNIQUE NOT NULL,
+    password_hash VARCHAR2(255) NOT NULL,
+    phone VARCHAR2(20),
+    join_date DATE DEFAULT SYSDATE NOT NULL,
+    status VARCHAR2(20) DEFAULT 'active' NOT NULL,
+    role VARCHAR2(20) DEFAULT 'volunteer' NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT chk_volunteer_status CHECK (status IN ('active', 'inactive', 'suspended')),
+    CONSTRAINT chk_volunteer_role CHECK (role IN ('admin', 'volunteer'))
+);
+
+-- Table 3: PROJECTS
+CREATE TABLE PROJECTS (
+    project_id NUMBER PRIMARY KEY,
+    org_id NUMBER NOT NULL,
+    name VARCHAR2(200) NOT NULL,
+    description CLOB,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    status VARCHAR2(20) DEFAULT 'planned' NOT NULL,
+    location VARCHAR2(500),
+    max_volunteers NUMBER DEFAULT 50,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT fk_project_org FOREIGN KEY (org_id) REFERENCES ORGANIZATIONS(org_id) ON DELETE CASCADE,
+    CONSTRAINT chk_project_status CHECK (status IN ('planned', 'active', 'completed', 'cancelled')),
+    CONSTRAINT chk_project_dates CHECK (end_date IS NULL OR end_date >= start_date),
+    CONSTRAINT chk_max_volunteers CHECK (max_volunteers > 0)
+);
+
+-- Table 4: EVENTS
+CREATE TABLE EVENTS (
+    event_id NUMBER PRIMARY KEY,
+    project_id NUMBER NOT NULL,
+    name VARCHAR2(200) NOT NULL,
+    description CLOB,
+    event_date TIMESTAMP NOT NULL,
+    location VARCHAR2(500),
+    max_participants NUMBER DEFAULT 30,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT fk_event_project FOREIGN KEY (project_id) REFERENCES PROJECTS(project_id) ON DELETE CASCADE,
+    CONSTRAINT chk_max_participants CHECK (max_participants > 0)
+);
+
+-- Table 5: VOLUNTEER_PROJECT (Join table)
+CREATE TABLE VOLUNTEER_PROJECT (
+    volunteer_id NUMBER NOT NULL,
+    project_id NUMBER NOT NULL,
+    join_date DATE DEFAULT SYSDATE NOT NULL,
+    role VARCHAR2(100) DEFAULT 'participant',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    PRIMARY KEY (volunteer_id, project_id),
+    CONSTRAINT fk_vp_volunteer FOREIGN KEY (volunteer_id) REFERENCES VOLUNTEERS(volunteer_id) ON DELETE CASCADE,
+    CONSTRAINT fk_vp_project FOREIGN KEY (project_id) REFERENCES PROJECTS(project_id) ON DELETE CASCADE
+);
+
+-- Table 6: EVENT_ATTENDANCE
+CREATE TABLE EVENT_ATTENDANCE (
+    event_id NUMBER NOT NULL,
+    volunteer_id NUMBER NOT NULL,
+    marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    status VARCHAR2(20) DEFAULT 'present' NOT NULL,
+    notes VARCHAR2(500),
+    PRIMARY KEY (event_id, volunteer_id),
+    CONSTRAINT fk_ea_event FOREIGN KEY (event_id) REFERENCES EVENTS(event_id) ON DELETE CASCADE,
+    CONSTRAINT fk_ea_volunteer FOREIGN KEY (volunteer_id) REFERENCES VOLUNTEERS(volunteer_id) ON DELETE CASCADE,
+    CONSTRAINT chk_attendance_status CHECK (status IN ('present', 'absent', 'excused'))
+);
+
+-- Table 7: RESOURCES
+CREATE TABLE RESOURCES (
+    resource_id NUMBER PRIMARY KEY,
+    project_id NUMBER NOT NULL,
+    name VARCHAR2(200) NOT NULL,
+    quantity NUMBER DEFAULT 1,
+    type VARCHAR2(100),
+    description CLOB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT fk_resource_project FOREIGN KEY (project_id) REFERENCES PROJECTS(project_id) ON DELETE CASCADE,
+    CONSTRAINT chk_quantity CHECK (quantity >= 0)
+);
+
+-- Create triggers for auto-increment using sequences
+CREATE OR REPLACE TRIGGER org_bir
+BEFORE INSERT ON ORGANIZATIONS
+FOR EACH ROW
+BEGIN
+    IF :NEW.org_id IS NULL THEN
+        :NEW.org_id := org_seq.NEXTVAL;
+    END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER volunteer_bir
+BEFORE INSERT ON VOLUNTEERS
+FOR EACH ROW
+BEGIN
+    IF :NEW.volunteer_id IS NULL THEN
+        :NEW.volunteer_id := volunteer_seq.NEXTVAL;
+    END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER project_bir
+BEFORE INSERT ON PROJECTS
+FOR EACH ROW
+BEGIN
+    IF :NEW.project_id IS NULL THEN
+        :NEW.project_id := project_seq.NEXTVAL;
+    END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER event_bir
+BEFORE INSERT ON EVENTS
+FOR EACH ROW
+BEGIN
+    IF :NEW.event_id IS NULL THEN
+        :NEW.event_id := event_seq.NEXTVAL;
+    END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER resource_bir
+BEFORE INSERT ON RESOURCES
+FOR EACH ROW
+BEGIN
+    IF :NEW.resource_id IS NULL THEN
+        :NEW.resource_id := resource_seq.NEXTVAL;
+    END IF;
+END;
+/
+
+-- Grant permissions (if needed for specific user)
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON ORGANIZATIONS TO your_user;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON VOLUNTEERS TO your_user;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON PROJECTS TO your_user;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON EVENTS TO your_user;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON VOLUNTEER_PROJECT TO your_user;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON EVENT_ATTENDANCE TO your_user;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON RESOURCES TO your_user;
+
+COMMIT;
