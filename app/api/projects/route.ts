@@ -2,16 +2,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, requireAdmin } from '@/lib/auth/middleware';
 import { createProjectSchema } from '@/lib/validations/schemas';
-import { getAllProjects, createProject, getProjectsByStatus } from '@/lib/db/queries/projects';
+import { getAllProjects, createProject, getProjectsByStatus, getProjectsByVolunteer } from '@/lib/db/queries/projects';
 
-// GET /api/projects - Get all projects (or filter by status)
+// GET /api/projects - Get all projects (or filter by status/volunteer)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') as 'planned' | 'active' | 'completed' | 'cancelled' | null;
+    const volunteerId = searchParams.get('volunteerId');
 
     let projects;
-    if (status) {
+    if (volunteerId) {
+      projects = await getProjectsByVolunteer(parseInt(volunteerId));
+    } else if (status) {
       projects = await getProjectsByStatus(status);
     } else {
       projects = await getAllProjects();

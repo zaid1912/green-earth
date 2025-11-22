@@ -73,7 +73,7 @@ export const updateEventSchema = z.object({
 
 // Attendance Schemas
 export const markAttendanceSchema = z.object({
-  status: z.enum(['registered', 'attended', 'absent', 'cancelled']),
+  status: z.enum(['present', 'absent', 'excused']),
   notes: z.string().max(1000).optional(),
 });
 
@@ -81,20 +81,16 @@ export const markAttendanceSchema = z.object({
 export const createResourceSchema = z.object({
   projectId: z.number().int().positive(),
   name: z.string().min(2).max(200),
-  type: z.string().max(100),
+  type: z.string().max(100).optional(),
   quantity: z.number().int().positive(),
-  unit: z.string().max(50),
-  status: z.enum(['available', 'in_use', 'depleted', 'ordered']),
-  notes: z.string().max(1000).optional(),
+  description: z.string().max(1000).optional(),
 });
 
 export const updateResourceSchema = z.object({
   name: z.string().min(2).max(200).optional(),
   type: z.string().max(100).optional(),
   quantity: z.number().int().positive().optional(),
-  unit: z.string().max(50).optional(),
-  status: z.enum(['available', 'in_use', 'depleted', 'ordered']).optional(),
-  notes: z.string().max(1000).optional(),
+  description: z.string().max(1000).optional(),
 });
 
 // Types inferred from schemas

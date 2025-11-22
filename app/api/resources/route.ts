@@ -42,16 +42,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { projectId, name, type, quantity, unit, status, notes } = validation.data;
+    const { projectId, name, type, quantity, description } = validation.data;
 
     const resourceId = await createResource(
       projectId,
       name,
-      type,
       quantity,
-      unit,
-      status,
-      notes
+      type || '',
+      description
     );
 
     return NextResponse.json(

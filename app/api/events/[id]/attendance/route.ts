@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { markAttendanceSchema } from '@/lib/validations/schemas';
-import { getEventAttendance, markAttendance } from '@/lib/db/queries/attendance';
+import { getAttendanceByEvent, markAttendance } from '@/lib/db/queries/attendance';
 
 // GET /api/events/[id]/attendance - Get attendance list for an event
 export async function GET(
@@ -18,7 +18,7 @@ export async function GET(
       );
     }
 
-    const attendance = await getEventAttendance(eventId);
+    const attendance = await getAttendanceByEvent(eventId);
 
     return NextResponse.json({ success: true, data: attendance }, { status: 200 });
   } catch (error: any) {
@@ -58,15 +58,15 @@ export async function POST(
 
     const { status, notes } = validation.data;
 
-    const attendanceId = await markAttendance(
-      user.volunteer_id,
+    const success = await markAttendance(
       eventId,
+      user.volunteer_id,
       status,
       notes
     );
 
     return NextResponse.json(
-      { success: true, message: 'Attendance marked successfully', data: { attendanceId } },
+      { success: true, message: 'Attendance marked successfully' },
       { status: 201 }
     );
   } catch (error: any) {

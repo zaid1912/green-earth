@@ -2,16 +2,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { createEventSchema } from '@/lib/validations/schemas';
-import { getAllEvents, getEventsByProject, createEvent } from '@/lib/db/queries/events';
+import { getAllEvents, getEventsByProject, getEventsForVolunteer, createEvent } from '@/lib/db/queries/events';
 
-// GET /api/events - Get all events (or filter by project)
+// GET /api/events - Get all events (or filter by project/volunteer)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
+    const volunteerId = searchParams.get('volunteerId');
 
     let events;
-    if (projectId) {
+    if (volunteerId) {
+      events = await getEventsForVolunteer(parseInt(volunteerId));
+    } else if (projectId) {
       events = await getEventsByProject(parseInt(projectId));
     } else {
       events = await getAllEvents();
