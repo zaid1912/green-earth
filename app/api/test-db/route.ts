@@ -27,8 +27,8 @@ export async function GET() {
         connection: 'OK',
         volunteers_count: volunteers.length,
         projects_count: projects.length,
-        sample_volunteer: volunteers[0]?.NAME || 'No volunteers found',
-        sample_project: projects[0]?.NAME || 'No projects found',
+        sample_volunteer: volunteers[0]?.name || 'No volunteers found',
+        sample_project: projects[0]?.name || 'No projects found',
       },
     });
   } catch (error: any) {

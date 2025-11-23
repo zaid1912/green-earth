@@ -160,5 +160,5 @@ export async function getResourceCountByProject(projectId: number): Promise<numb
     WHERE project_id = :1
   `;
   const result = await executeQuerySingle<any>(query, [projectId]);
-  return result?.COUNT || 0;
+  return result?.count || 0;
 }

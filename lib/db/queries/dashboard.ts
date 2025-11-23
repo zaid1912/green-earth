@@ -73,26 +73,26 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
   const attendanceStats = await executeQuerySingle<any>(attendanceStatsQuery);
 
   return {
-    total_volunteers: volunteerStats?.TOTAL_VOLUNTEERS || 0,
-    active_volunteers: volunteerStats?.ACTIVE_VOLUNTEERS || 0,
-    total_projects: projectStats?.TOTAL_PROJECTS || 0,
-    active_projects: projectStats?.ACTIVE_PROJECTS || 0,
-    total_events: eventStats?.TOTAL_EVENTS || 0,
-    upcoming_events: eventStats?.UPCOMING_EVENTS || 0,
+    total_volunteers: volunteerStats?.total_volunteers || 0,
+    active_volunteers: volunteerStats?.active_volunteers || 0,
+    total_projects: projectStats?.total_projects || 0,
+    active_projects: projectStats?.active_projects || 0,
+    total_events: eventStats?.total_events || 0,
+    upcoming_events: eventStats?.upcoming_events || 0,
     project_status_breakdown: {
-      planned: projectStatusBreakdown?.PLANNED || 0,
-      active: projectStatusBreakdown?.ACTIVE || 0,
-      completed: projectStatusBreakdown?.COMPLETED || 0,
-      cancelled: projectStatusBreakdown?.CANCELLED || 0,
+      planned: projectStatusBreakdown?.planned || 0,
+      active: projectStatusBreakdown?.active || 0,
+      completed: projectStatusBreakdown?.completed || 0,
+      cancelled: projectStatusBreakdown?.cancelled || 0,
     },
     volunteers_per_project: volunteersPerProject.map((row) => ({
-      project_id: row.PROJECT_ID,
-      project_name: row.PROJECT_NAME,
-      volunteer_count: row.VOLUNTEER_COUNT || 0,
+      project_id: row.project_id,
+      project_name: row.project_name,
+      volunteer_count: row.volunteer_count || 0,
     })),
     attendance_stats: {
-      total_attendances: attendanceStats?.TOTAL_ATTENDANCES || 0,
-      average_attendance_per_event: attendanceStats?.AVERAGE_ATTENDANCE_PER_EVENT || 0,
+      total_attendances: attendanceStats?.total_attendances || 0,
+      average_attendance_per_event: attendanceStats?.average_attendance_per_event || 0,
     },
   };
 }
@@ -150,19 +150,19 @@ export async function getVolunteerDashboardStats(
 
   return {
     volunteer_id: volunteerId,
-    projects_joined: projectsCount?.COUNT || 0,
-    events_attended: eventsCount?.COUNT || 0,
+    projects_joined: projectsCount?.count || 0,
+    events_attended: eventsCount?.count || 0,
     projects: projects.map((row) => ({
-      project_id: row.PROJECT_ID,
-      project_name: row.PROJECT_NAME,
-      join_date: row.JOIN_DATE,
-      role: row.ROLE,
+      project_id: row.project_id,
+      project_name: row.project_name,
+      join_date: row.join_date,
+      role: row.role,
     })),
     recent_events: recentEvents.map((row) => ({
-      event_id: row.EVENT_ID,
-      event_name: row.EVENT_NAME,
-      event_date: row.EVENT_DATE,
-      status: row.STATUS,
+      event_id: row.event_id,
+      event_name: row.event_name,
+      event_date: row.event_date,
+      status: row.status,
     })),
   };
 }
@@ -194,10 +194,10 @@ export async function getProjectStats(projectId: number): Promise<{
   const result = await executeQuerySingle<any>(query, [projectId]);
 
   return {
-    volunteer_count: result?.VOLUNTEER_COUNT || 0,
-    event_count: result?.EVENT_COUNT || 0,
-    resource_count: result?.RESOURCE_COUNT || 0,
-    total_attendance: result?.TOTAL_ATTENDANCE || 0,
+    volunteer_count: result?.volunteer_count || 0,
+    event_count: result?.event_count || 0,
+    resource_count: result?.resource_count || 0,
+    total_attendance: result?.total_attendance || 0,
   };
 }
 

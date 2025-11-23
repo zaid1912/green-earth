@@ -240,7 +240,7 @@ export async function joinProject(
   `;
   const existing = await executeQuerySingle<any>(checkQuery, [volunteerId, projectId]);
 
-  if ((existing?.COUNT || 0) > 0) {
+  if ((existing?.count || 0) > 0) {
     throw new Error('Volunteer already joined this project');
   }
 
@@ -256,7 +256,7 @@ export async function joinProject(
   `;
   const capacity = await executeQuerySingle<any>(capacityQuery, [projectId]);
 
-  if (capacity && capacity.CURRENT_COUNT >= capacity.MAX_VOLUNTEERS) {
+  if (capacity && capacity.current_count >= capacity.max_volunteers) {
     throw new Error('Project has reached maximum volunteer capacity');
   }
 
@@ -302,10 +302,10 @@ export async function countProjectsByStatus(): Promise<{
   `;
   const result = await executeQuerySingle<any>(query);
   return {
-    total: result?.TOTAL || 0,
-    planned: result?.PLANNED || 0,
-    active: result?.ACTIVE || 0,
-    completed: result?.COMPLETED || 0,
-    cancelled: result?.CANCELLED || 0,
+    total: result?.total || 0,
+    planned: result?.planned || 0,
+    active: result?.active || 0,
+    completed: result?.completed || 0,
+    cancelled: result?.cancelled || 0,
   };
 }

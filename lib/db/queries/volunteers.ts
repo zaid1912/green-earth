@@ -61,7 +61,7 @@ export async function createVolunteer(
     SELECT volunteer_id FROM VOLUNTEERS WHERE LOWER(email) = LOWER(:1)
   `;
   const result = await executeQuery<any>(selectQuery, [email]);
-  return result[0].VOLUNTEER_ID;
+  return result[0].volunteer_id;
 }
 
 /**
@@ -155,10 +155,10 @@ export async function countVolunteersByStatus(): Promise<{
   `;
   const result = await executeQuerySingle<any>(query);
   return {
-    total: result?.TOTAL || 0,
-    active: result?.ACTIVE || 0,
-    inactive: result?.INACTIVE || 0,
-    suspended: result?.SUSPENDED || 0,
+    total: result?.total || 0,
+    active: result?.active || 0,
+    inactive: result?.inactive || 0,
+    suspended: result?.suspended || 0,
   };
 }
 
@@ -179,5 +179,5 @@ export async function emailExists(email: string, excludeVolunteerId?: number): P
   }
 
   const result = await executeQuerySingle<any>(query, params);
-  return (result?.COUNT || 0) > 0;
+  return (result?.count || 0) > 0;
 }

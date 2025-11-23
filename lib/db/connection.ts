@@ -1,6 +1,28 @@
 // Oracle Database Connection Pool
 import oracledb from 'oracledb';
 
+/**
+ * Convert Oracle uppercase column names to lowercase for TypeScript types
+ */
+function convertKeysToLowerCase<T = any>(obj: any): T {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map((item) => convertKeysToLowerCase(item)) as any;
+  }
+  if (typeof obj === 'object') {
+    const converted: any = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        converted[key.toLowerCase()] = obj[key];
+      }
+    }
+    return converted;
+  }
+  return obj;
+}
+
 // Oracle connection configuration
 const dbConfig = {
   user: process.env.ORACLE_USER || 'ADMIN',
@@ -87,7 +109,9 @@ export async function executeQuery<T = any>(
       ...options,
     });
 
-    return (result.rows as T[]) || [];
+    // Convert Oracle uppercase column names to lowercase
+    const rows = (result.rows || []) as any[];
+    return rows.map((row) => convertKeysToLowerCase<T>(row));
   } catch (error) {
     console.error('❌ Query execution error:', error);
     console.error('Query:', query);

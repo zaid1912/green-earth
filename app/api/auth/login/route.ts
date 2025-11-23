@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if account is active
-    if (volunteer.STATUS !== 'active') {
+    if (volunteer.status !== 'active') {
       return NextResponse.json(
         {
           success: false,
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Verify password
     const isValidPassword = await comparePassword(
       password,
-      volunteer.PASSWORD_HASH
+      volunteer.password_hash
     );
     if (!isValidPassword) {
       return NextResponse.json(
@@ -65,9 +65,9 @@ export async function POST(request: NextRequest) {
 
     // Generate JWT token
     const token = signToken({
-      volunteer_id: volunteer.VOLUNTEER_ID,
-      email: volunteer.EMAIL,
-      role: volunteer.ROLE,
+      volunteer_id: volunteer.volunteer_id,
+      email: volunteer.email,
+      role: volunteer.role,
     });
 
     // Set auth cookie
@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Login successful',
         data: {
-          volunteerId: volunteer.VOLUNTEER_ID,
-          name: volunteer.NAME,
-          email: volunteer.EMAIL,
-          role: volunteer.ROLE,
+          volunteerId: volunteer.volunteer_id,
+          name: volunteer.name,
+          email: volunteer.email,
+          role: volunteer.role,
         },
       },
       { status: 200 }

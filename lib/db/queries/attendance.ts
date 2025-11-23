@@ -64,7 +64,7 @@ export async function markAttendance(
   `;
   const existing = await executeQuerySingle<any>(checkQuery, [eventId, volunteerId]);
 
-  if ((existing?.COUNT || 0) > 0) {
+  if ((existing?.count || 0) > 0) {
     // Update existing attendance
     const updateQuery = `
       UPDATE EVENT_ATTENDANCE
@@ -126,11 +126,11 @@ export async function getAttendanceStats(): Promise<{
   const avgResult = await executeQuerySingle<any>(avgQuery);
 
   return {
-    total: result?.TOTAL || 0,
-    present: result?.PRESENT || 0,
-    absent: result?.ABSENT || 0,
-    excused: result?.EXCUSED || 0,
-    averagePerEvent: avgResult?.AVG_PER_EVENT || 0,
+    total: result?.total || 0,
+    present: result?.present || 0,
+    absent: result?.absent || 0,
+    excused: result?.excused || 0,
+    averagePerEvent: avgResult?.avg_per_event || 0,
   };
 }
 
@@ -144,5 +144,5 @@ export async function hasMarkedAttendance(eventId: number, volunteerId: number):
     WHERE event_id = :1 AND volunteer_id = :2
   `;
   const result = await executeQuerySingle<any>(query, [eventId, volunteerId]);
-  return (result?.COUNT || 0) > 0;
+  return (result?.count || 0) > 0;
 }

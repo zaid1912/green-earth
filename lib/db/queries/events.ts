@@ -237,7 +237,7 @@ export async function countEvents(): Promise<{ total: number; upcoming: number }
   `;
   const result = await executeQuerySingle<any>(query);
   return {
-    total: result?.TOTAL || 0,
-    upcoming: result?.UPCOMING || 0,
+    total: result?.total || 0,
+    upcoming: result?.upcoming || 0,
   };
 }
