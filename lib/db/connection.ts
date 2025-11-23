@@ -9,6 +9,14 @@ const dbConfig = {
   walletLocation: process.env.ORACLE_WALLET_PATH || '',
 };
 
+// Debug logging
+console.log('🔍 Database Config:', {
+  user: dbConfig.user,
+  passwordLength: dbConfig.password?.length,
+  connectionString: dbConfig.connectionString,
+  walletLocation: dbConfig.walletLocation,
+});
+
 // Pool configuration with wallet support for Oracle Cloud (Thin mode)
 const poolConfig: any = {
   user: dbConfig.user,
