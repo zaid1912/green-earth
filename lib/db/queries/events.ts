@@ -1,5 +1,6 @@
 // Event Database Queries
-import { executeQuery, executeQuerySingle, executeUpdate } from '../connection';
+import oracledb from 'oracledb';
+import { executeQuery, executeQuerySingle, executeUpdate, executeInsertReturning } from '../connection';
 import { Event } from '@/types/database';
 
 /**
@@ -88,7 +89,7 @@ export async function getUpcomingEvents(): Promise<Event[]> {
       e.event_id,
       e.project_id,
       e.name,
-      e.description,
+      TO_CHAR(e.description) as description,
       e.event_date,
       e.location,
       e.max_participants,
@@ -99,7 +100,7 @@ export async function getUpcomingEvents(): Promise<Event[]> {
     LEFT JOIN PROJECTS p ON e.project_id = p.project_id
     LEFT JOIN EVENT_ATTENDANCE ea ON e.event_id = ea.event_id
     WHERE e.event_date >= SYSTIMESTAMP
-    GROUP BY e.event_id, e.project_id, e.name, e.description, e.event_date,
+    GROUP BY e.event_id, e.project_id, e.name, TO_CHAR(e.description), e.event_date,
              e.location, e.max_participants, e.created_at, p.name
     ORDER BY e.event_date ASC
   `;
@@ -115,7 +116,7 @@ export async function getEventsForVolunteer(volunteerId: number): Promise<Event[
       e.event_id,
       e.project_id,
       e.name,
-      e.description,
+      TO_CHAR(e.description) as description,
       e.event_date,
       e.location,
       e.max_participants,
@@ -145,22 +146,22 @@ export async function createEvent(
 ): Promise<number> {
   const query = `
     INSERT INTO EVENTS (project_id, name, description, event_date, location, max_participants)
-    VALUES (:1, :2, :3, :4, :5, :6)
-    RETURNING event_id INTO :7
+    VALUES (:projectId, :name, :description, :eventDate, :location, :maxParticipants)
+    RETURNING event_id INTO :eventId
   `;
 
   const params = {
-    1: projectId,
-    2: name,
-    3: description,
-    4: eventDate,
-    5: location,
-    6: maxParticipants,
-    7: { dir: 3003, type: 2002 }, // OUT parameter
+    projectId,
+    name,
+    description,
+    eventDate,
+    location,
+    maxParticipants,
+    eventId: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }, // OUT parameter for numeric event_id
   };
 
-  const result = await executeQuery(query, params);
-  return result[0] as any as number;
+  const eventId = await executeInsertReturning(query, params, 'eventId');
+  return eventId;
 }
 
 /**

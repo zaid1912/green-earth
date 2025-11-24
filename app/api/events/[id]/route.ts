@@ -7,10 +7,11 @@ import { getEventById, updateEvent, deleteEvent } from '@/lib/db/queries/events'
 // GET /api/events/[id] - Get single event
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const eventId = parseInt(params.id);
+    const { id } = await params;
+    const eventId = parseInt(id);
 
     if (isNaN(eventId)) {
       return NextResponse.json(
@@ -41,13 +42,14 @@ export async function GET(
 // PUT /api/events/[id] - Update event (admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    const eventId = parseInt(params.id);
+    const { id } = await params;
+    const eventId = parseInt(id);
     if (isNaN(eventId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid event ID' },
@@ -96,13 +98,14 @@ export async function PUT(
 // DELETE /api/events/[id] - Delete event (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    const eventId = parseInt(params.id);
+    const { id } = await params;
+    const eventId = parseInt(id);
     if (isNaN(eventId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid event ID' },

@@ -6,13 +6,14 @@ import { deleteVolunteer, getVolunteerById } from '@/lib/db/queries/volunteers';
 // GET /api/volunteers/[id] - Get single volunteer (admin only)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    const volunteerId = parseInt(params.id);
+    const { id } = await params;
+    const volunteerId = parseInt(id);
     if (isNaN(volunteerId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid volunteer ID' },
@@ -42,13 +43,14 @@ export async function GET(
 // DELETE /api/volunteers/[id] - Delete volunteer (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    const volunteerId = parseInt(params.id);
+    const { id } = await params;
+    const volunteerId = parseInt(id);
     if (isNaN(volunteerId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid volunteer ID' },

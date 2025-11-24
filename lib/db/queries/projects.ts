@@ -1,5 +1,6 @@
 // Project Database Queries
-import { executeQuery, executeQuerySingle, executeUpdate } from '../connection';
+import oracledb from 'oracledb';
+import { executeQuery, executeQuerySingle, executeUpdate, executeInsertReturning } from '../connection';
 import { Project } from '@/types/database';
 
 /**
@@ -73,24 +74,24 @@ export async function createProject(
 ): Promise<number> {
   const query = `
     INSERT INTO PROJECTS (org_id, name, description, start_date, end_date, status, location, max_volunteers)
-    VALUES (:1, :2, :3, :4, :5, :6, :7, :8)
-    RETURNING project_id INTO :9
+    VALUES (:orgId, :name, :description, :startDate, :endDate, :status, :location, :maxVolunteers)
+    RETURNING project_id INTO :projectId
   `;
 
   const params = {
-    1: orgId,
-    2: name,
-    3: description,
-    4: startDate,
-    5: endDate,
-    6: status,
-    7: location,
-    8: maxVolunteers,
-    9: { dir: 3003, type: 2002 }, // OUT parameter
+    orgId: orgId,
+    name: name,
+    description: description,
+    startDate: startDate,
+    endDate: endDate,
+    status: status,
+    location: location,
+    maxVolunteers: maxVolunteers,
+    projectId: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }, // OUT parameter for numeric project_id
   };
 
-  const result = await executeQuery(query, params);
-  return result[0] as any as number;
+  const projectId = await executeInsertReturning(query, params, 'projectId');
+  return projectId;
 }
 
 /**
@@ -205,7 +206,7 @@ export async function getProjectsByVolunteer(volunteerId: number): Promise<Proje
       p.project_id,
       p.org_id,
       p.name,
-      p.description,
+      TO_CHAR(p.description) as description,
       p.start_date,
       p.end_date,
       p.status,

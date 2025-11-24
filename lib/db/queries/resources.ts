@@ -1,5 +1,6 @@
 // Resources Database Queries
-import { executeQuery, executeQuerySingle, executeUpdate } from '../connection';
+import oracledb from 'oracledb';
+import { executeQuery, executeQuerySingle, executeUpdate, executeInsertReturning } from '../connection';
 import { Resource } from '@/types/database';
 
 /**
@@ -13,7 +14,7 @@ export async function getAllResources(): Promise<Resource[]> {
       r.name,
       r.quantity,
       r.type,
-      r.description,
+      TO_CHAR(r.description) as description,
       r.created_at,
       p.name as project_name
     FROM RESOURCES r
@@ -34,7 +35,7 @@ export async function getResourceById(resourceId: number): Promise<Resource | nu
       r.name,
       r.quantity,
       r.type,
-      r.description,
+      TO_CHAR(r.description) as description,
       r.created_at,
       p.name as project_name
     FROM RESOURCES r
@@ -55,7 +56,7 @@ export async function getResourcesByProject(projectId: number): Promise<Resource
       name,
       quantity,
       type,
-      description,
+      TO_CHAR(description) as description,
       created_at
     FROM RESOURCES
     WHERE project_id = :1
@@ -76,21 +77,21 @@ export async function createResource(
 ): Promise<number> {
   const query = `
     INSERT INTO RESOURCES (project_id, name, quantity, type, description)
-    VALUES (:1, :2, :3, :4, :5)
-    RETURNING resource_id INTO :6
+    VALUES (:projectId, :name, :quantity, :type, :description)
+    RETURNING resource_id INTO :resourceId
   `;
 
   const params = {
-    1: projectId,
-    2: name,
-    3: quantity,
-    4: type,
-    5: description || null,
-    6: { dir: 3003, type: 2002 }, // OUT parameter
+    projectId,
+    name,
+    quantity,
+    type,
+    description: description || null,
+    resourceId: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }, // OUT parameter for numeric resource_id
   };
 
-  const result = await executeQuery(query, params);
-  return result[0] as any as number;
+  const resourceId = await executeInsertReturning(query, params, 'resourceId');
+  return resourceId;
 }
 
 /**

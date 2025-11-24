@@ -7,10 +7,11 @@ import { getResourceById, updateResource, deleteResource } from '@/lib/db/querie
 // GET /api/resources/[id] - Get single resource
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const resourceId = parseInt(params.id);
+    const { id } = await params;
+    const resourceId = parseInt(id);
     if (isNaN(resourceId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid resource ID' },
@@ -40,13 +41,14 @@ export async function GET(
 // PUT /api/resources/[id] - Update resource (admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    const resourceId = parseInt(params.id);
+    const { id } = await params;
+    const resourceId = parseInt(id);
     if (isNaN(resourceId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid resource ID' },
@@ -94,13 +96,14 @@ export async function PUT(
 // DELETE /api/resources/[id] - Delete resource (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    const resourceId = parseInt(params.id);
+    const { id } = await params;
+    const resourceId = parseInt(id);
     if (isNaN(resourceId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid resource ID' },

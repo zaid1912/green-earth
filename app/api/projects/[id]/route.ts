@@ -7,10 +7,11 @@ import { getProjectById, updateProject, deleteProject } from '@/lib/db/queries/p
 // GET /api/projects/[id] - Get single project
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const projectId = parseInt(params.id);
+    const { id } = await params;
+    const projectId = parseInt(id);
 
     if (isNaN(projectId)) {
       return NextResponse.json(
@@ -57,7 +58,7 @@ export async function GET(
 // PUT /api/projects/[id] - Update project (admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Require admin authentication
@@ -66,7 +67,8 @@ export async function PUT(
       return authResult;
     }
 
-    const projectId = parseInt(params.id);
+    const { id } = await params;
+    const projectId = parseInt(id);
 
     if (isNaN(projectId)) {
       return NextResponse.json(
@@ -140,7 +142,7 @@ export async function PUT(
 // DELETE /api/projects/[id] - Delete project (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Require admin authentication
@@ -149,7 +151,8 @@ export async function DELETE(
       return authResult;
     }
 
-    const projectId = parseInt(params.id);
+    const { id } = await params;
+    const projectId = parseInt(id);
 
     if (isNaN(projectId)) {
       return NextResponse.json(

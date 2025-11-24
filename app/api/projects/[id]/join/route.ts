@@ -7,7 +7,7 @@ import { joinProject } from '@/lib/db/queries/projects';
 // POST /api/projects/[id]/join - Join a project (authenticated volunteers)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Require authentication
@@ -15,7 +15,8 @@ export async function POST(
     if (user instanceof NextResponse) {
       return user;
     }
-    const projectId = parseInt(params.id);
+    const { id } = await params;
+    const projectId = parseInt(id);
 
     if (isNaN(projectId)) {
       return NextResponse.json(

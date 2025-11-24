@@ -96,7 +96,7 @@ export async function getConnection(): Promise<oracledb.Connection> {
  */
 export async function executeQuery<T = any>(
   query: string,
-  params: any[] = [],
+  params: any[] | Record<string, any> = [],
   options: oracledb.ExecuteOptions = {}
 ): Promise<T[]> {
   let connection: oracledb.Connection | null = null;
@@ -133,7 +133,7 @@ export async function executeQuery<T = any>(
  */
 export async function executeQuerySingle<T = any>(
   query: string,
-  params: any[] = []
+  params: any[] | Record<string, any> = []
 ): Promise<T | null> {
   const results = await executeQuery<T>(query, params);
   return results.length > 0 ? results[0] : null;
@@ -144,7 +144,7 @@ export async function executeQuerySingle<T = any>(
  */
 export async function executeUpdate(
   query: string,
-  params: any[] = []
+  params: any[] | Record<string, any> = []
 ): Promise<number> {
   let connection: oracledb.Connection | null = null;
 
@@ -158,6 +158,42 @@ export async function executeUpdate(
     return result.rowsAffected || 0;
   } catch (error) {
     console.error('❌ Update execution error:', error);
+    console.error('Query:', query);
+    console.error('Params:', params);
+    throw error;
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (error) {
+        console.error('❌ Error closing connection:', error);
+      }
+    }
+  }
+}
+
+/**
+ * Execute an INSERT query with RETURNING clause
+ */
+export async function executeInsertReturning(
+  query: string,
+  params: Record<string, any>,
+  outBindName: string
+): Promise<any> {
+  let connection: oracledb.Connection | null = null;
+
+  try {
+    connection = await getConnection();
+
+    const result = await connection.execute(query, params, {
+      autoCommit: true,
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
+
+    // Get the returned value from outBinds
+    return result.outBinds?.[outBindName]?.[0];
+  } catch (error) {
+    console.error('❌ Insert with RETURNING execution error:', error);
     console.error('Query:', query);
     console.error('Params:', params);
     throw error;

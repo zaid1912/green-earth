@@ -7,10 +7,11 @@ import { getAttendanceByEvent, markAttendance } from '@/lib/db/queries/attendanc
 // GET /api/events/[id]/attendance - Get attendance list for an event
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const eventId = parseInt(params.id);
+    const { id } = await params;
+    const eventId = parseInt(id);
     if (isNaN(eventId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid event ID' },
@@ -33,12 +34,13 @@ export async function GET(
 // POST /api/events/[id]/attendance - Mark attendance (authenticated volunteers)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth(request);
     if (user instanceof NextResponse) return user;
-    const eventId = parseInt(params.id);
+    const { id } = await params;
+    const eventId = parseInt(id);
 
     if (isNaN(eventId)) {
       return NextResponse.json(

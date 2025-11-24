@@ -32,8 +32,8 @@ export const createProjectSchema = z.object({
   orgId: z.number().int().positive(),
   name: z.string().min(2).max(200),
   description: z.string().max(4000),
-  startDate: z.string().datetime().or(z.date()),
-  endDate: z.string().datetime().or(z.date()).nullable().optional(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.string().datetime()).or(z.date()),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.string().datetime()).or(z.date()).nullable().optional(),
   status: z.enum(['planned', 'active', 'completed', 'cancelled']),
   location: z.string().max(500),
   maxVolunteers: z.number().int().positive(),
@@ -42,8 +42,8 @@ export const createProjectSchema = z.object({
 export const updateProjectSchema = z.object({
   name: z.string().min(2).max(200).optional(),
   description: z.string().max(4000).optional(),
-  startDate: z.string().datetime().or(z.date()).optional(),
-  endDate: z.string().datetime().or(z.date()).nullable().optional(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.string().datetime()).or(z.date()).optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.string().datetime()).or(z.date()).nullable().optional(),
   status: z.enum(['planned', 'active', 'completed', 'cancelled']).optional(),
   location: z.string().max(500).optional(),
   maxVolunteers: z.number().int().positive().optional(),
@@ -58,7 +58,7 @@ export const createEventSchema = z.object({
   projectId: z.number().int().positive(),
   name: z.string().min(2).max(200),
   description: z.string().max(4000),
-  eventDate: z.string().datetime().or(z.date()),
+  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.string().datetime()).or(z.date()),
   location: z.string().max(500),
   maxParticipants: z.number().int().positive(),
 });
@@ -66,7 +66,7 @@ export const createEventSchema = z.object({
 export const updateEventSchema = z.object({
   name: z.string().min(2).max(200).optional(),
   description: z.string().max(4000).optional(),
-  eventDate: z.string().datetime().or(z.date()).optional(),
+  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.string().datetime()).or(z.date()).optional(),
   location: z.string().max(500).optional(),
   maxParticipants: z.number().int().positive().optional(),
 });
