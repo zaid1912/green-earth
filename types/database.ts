@@ -36,6 +36,7 @@ export interface Project {
   // Computed fields (from joins)
   volunteer_count?: number;
   org_name?: string;
+  is_joined?: number; // 1 if volunteer has joined, 0 otherwise
 }
 
 export interface Event {
@@ -113,8 +114,9 @@ export interface AdminDashboardStats {
 
 export interface VolunteerDashboardStats {
   volunteer_id: number;
-  projects_joined: number;
-  events_attended: number;
+  MY_PROJECTS: number;
+  EVENTS_ATTENDED: number;
+  UPCOMING_EVENTS: number;
   projects: {
     project_id: number;
     project_name: string;

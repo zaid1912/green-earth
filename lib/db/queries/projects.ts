@@ -32,6 +32,37 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 /**
+ * Get all projects with volunteer count and join status for a specific volunteer
+ */
+export async function getAllProjectsWithJoinStatus(volunteerId: number): Promise<Project[]> {
+  const query = `
+    SELECT
+      p.project_id,
+      p.org_id,
+      p.name,
+      TO_CHAR(p.description) as description,
+      p.start_date,
+      p.end_date,
+      p.status,
+      p.location,
+      p.max_volunteers,
+      p.created_at,
+      o.name as org_name,
+      COUNT(DISTINCT vp_all.volunteer_id) as volunteer_count,
+      CASE WHEN vp_user.volunteer_id IS NOT NULL THEN 1 ELSE 0 END as is_joined
+    FROM PROJECTS p
+    LEFT JOIN ORGANIZATIONS o ON p.org_id = o.org_id
+    LEFT JOIN VOLUNTEER_PROJECT vp_all ON p.project_id = vp_all.project_id
+    LEFT JOIN VOLUNTEER_PROJECT vp_user ON p.project_id = vp_user.project_id AND vp_user.volunteer_id = :1
+    GROUP BY p.project_id, p.org_id, p.name, TO_CHAR(p.description), p.start_date,
+             p.end_date, p.status, p.location, p.max_volunteers, p.created_at, o.name,
+             vp_user.volunteer_id
+    ORDER BY p.created_at DESC
+  `;
+  return executeQuery<Project>(query, [volunteerId]);
+}
+
+/**
  * Get project by ID with details
  */
 export async function getProjectById(projectId: number): Promise<Project | null> {

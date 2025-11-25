@@ -78,6 +78,10 @@ export default function VolunteerProjectsPage() {
     return (project.volunteer_count || 0) >= project.max_volunteers;
   };
 
+  const isProjectJoined = (project: Project) => {
+    return project.is_joined === 1;
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -142,9 +146,13 @@ export default function VolunteerProjectsPage() {
                   <Button
                     className="w-full"
                     onClick={() => handleJoinProject(project.project_id)}
-                    disabled={isProjectFull(project)}
+                    disabled={isProjectFull(project) || isProjectJoined(project)}
                   >
-                    {isProjectFull(project) ? 'Project Full' : 'Join Project'}
+                    {isProjectJoined(project)
+                      ? 'Already Joined'
+                      : isProjectFull(project)
+                      ? 'Project Full'
+                      : 'Join Project'}
                   </Button>
                 </div>
               </CardContent>
