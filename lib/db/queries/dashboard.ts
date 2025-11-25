@@ -119,6 +119,15 @@ export async function getVolunteerDashboardStats(
   `;
   const eventsCount = await executeQuerySingle<any>(eventsCountQuery, [volunteerId]);
 
+  // Upcoming events count
+  const upcomingEventsQuery = `
+    SELECT COUNT(*) as count
+    FROM EVENT_ATTENDANCE ea
+    JOIN EVENTS e ON ea.event_id = e.event_id
+    WHERE ea.volunteer_id = :1 AND e.event_date >= SYSTIMESTAMP
+  `;
+  const upcomingEventsCount = await executeQuerySingle<any>(upcomingEventsQuery, [volunteerId]);
+
   // Projects list with details
   const projectsQuery = `
     SELECT
@@ -150,8 +159,9 @@ export async function getVolunteerDashboardStats(
 
   return {
     volunteer_id: volunteerId,
-    projects_joined: projectsCount?.count || 0,
-    events_attended: eventsCount?.count || 0,
+    MY_PROJECTS: projectsCount?.count || 0,
+    EVENTS_ATTENDED: eventsCount?.count || 0,
+    UPCOMING_EVENTS: upcomingEventsCount?.count || 0,
     projects: projects.map((row) => ({
       project_id: row.project_id,
       project_name: row.project_name,

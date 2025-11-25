@@ -35,13 +35,13 @@ export async function GET(request: NextRequest) {
       {
         success: true,
         data: {
-          volunteerId: volunteer.volunteer_id,
+          volunteer_id: volunteer.volunteer_id,
           name: volunteer.name,
           email: volunteer.email,
           phone: volunteer.phone,
           role: volunteer.role,
           status: volunteer.status,
-          joinDate: volunteer.join_date,
+          join_date: volunteer.join_date,
         },
       },
       { status: 200 }
