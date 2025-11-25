@@ -127,10 +127,10 @@ export async function getEventsForVolunteer(volunteerId: number): Promise<Event[
     JOIN PROJECTS p ON e.project_id = p.project_id
     JOIN VOLUNTEER_PROJECT vp ON p.project_id = vp.project_id
     LEFT JOIN EVENT_ATTENDANCE ea ON e.event_id = ea.event_id AND ea.volunteer_id = :1
-    WHERE vp.volunteer_id = :1
+    WHERE vp.volunteer_id = :2
     ORDER BY e.event_date DESC
   `;
-  return executeQuery<Event>(query, [volunteerId]);
+  return executeQuery<Event>(query, [volunteerId, volunteerId]);
 }
 
 /**
