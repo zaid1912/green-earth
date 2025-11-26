@@ -1,7 +1,8 @@
 // Volunteers API - Individual Volunteer Operations
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
-import { deleteVolunteer, getVolunteerById } from '@/lib/db/queries/volunteers';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as VolunteerRepository from '@/lib/db/repository/volunteers.repository';
 
 // GET /api/volunteers/[id] - Get single volunteer (admin only)
 export async function GET(
@@ -12,6 +13,9 @@ export async function GET(
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const volunteerId = parseInt(id);
     if (isNaN(volunteerId)) {
@@ -21,7 +25,7 @@ export async function GET(
       );
     }
 
-    const volunteer = await getVolunteerById(volunteerId);
+    const volunteer = await VolunteerRepository.getVolunteerById(dbType, volunteerId);
 
     if (!volunteer) {
       return NextResponse.json(
@@ -49,6 +53,9 @@ export async function DELETE(
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const volunteerId = parseInt(id);
     if (isNaN(volunteerId)) {
@@ -58,7 +65,7 @@ export async function DELETE(
       );
     }
 
-    const success = await deleteVolunteer(volunteerId);
+    const success = await VolunteerRepository.deleteVolunteer(dbType, volunteerId);
 
     if (!success) {
       return NextResponse.json(

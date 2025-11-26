@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { updateEventSchema } from '@/lib/validations/schemas';
-import { getEventById, updateEvent, deleteEvent } from '@/lib/db/queries/events';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as EventRepository from '@/lib/db/repository/events.repository';
 
 // GET /api/events/[id] - Get single event
 export async function GET(
@@ -10,6 +11,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const eventId = parseInt(id);
 
@@ -20,7 +24,7 @@ export async function GET(
       );
     }
 
-    const event = await getEventById(eventId);
+    const event = await EventRepository.getEventById(dbType, eventId);
 
     if (!event) {
       return NextResponse.json(
@@ -48,6 +52,9 @@ export async function PUT(
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const eventId = parseInt(id);
     if (isNaN(eventId)) {
@@ -61,7 +68,7 @@ export async function PUT(
     const validation = updateEventSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Validation failed', details: validation.error.errors },
+        { success: false, error: 'Validation failed', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -73,7 +80,7 @@ export async function PUT(
     if (validation.data.location) updateData.location = validation.data.location;
     if (validation.data.maxParticipants) updateData.maxParticipants = validation.data.maxParticipants;
 
-    const success = await updateEvent(eventId, updateData);
+    const success = await EventRepository.updateEvent(dbType, eventId, updateData);
 
     if (!success) {
       return NextResponse.json(
@@ -104,6 +111,9 @@ export async function DELETE(
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const eventId = parseInt(id);
     if (isNaN(eventId)) {
@@ -113,7 +123,7 @@ export async function DELETE(
       );
     }
 
-    const success = await deleteEvent(eventId);
+    const success = await EventRepository.deleteEvent(dbType, eventId);
 
     if (!success) {
       return NextResponse.json(

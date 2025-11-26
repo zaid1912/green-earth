@@ -1,7 +1,8 @@
 // Leave Project API
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
-import { leaveProject } from '@/lib/db/queries/projects';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as ProjectRepository from '@/lib/db/repository/projects.repository';
 
 // POST /api/projects/[id]/leave - Leave a project (authenticated volunteers)
 export async function POST(
@@ -14,6 +15,10 @@ export async function POST(
     if (user instanceof NextResponse) {
       return user;
     }
+
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const projectId = parseInt(id);
 
@@ -28,7 +33,7 @@ export async function POST(
     }
 
     // Leave project
-    const success = await leaveProject(user.volunteer_id, projectId);
+    const success = await ProjectRepository.leaveProject(dbType, user.volunteer_id, projectId);
 
     if (!success) {
       return NextResponse.json(

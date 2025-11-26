@@ -1,13 +1,17 @@
 // Register New Volunteer
 import { NextRequest, NextResponse } from 'next/server';
 import { registerSchema } from '@/lib/validations/schemas';
-import { createVolunteer, emailExists } from '@/lib/db/queries/volunteers';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as VolunteerRepository from '@/lib/db/repository/volunteers.repository';
 import { hashPassword } from '@/lib/auth/password';
 import { signToken } from '@/lib/auth/jwt';
 import { setAuthCookie } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const body = await request.json();
 
     // Validate input
@@ -26,7 +30,7 @@ export async function POST(request: NextRequest) {
     const { name, email, password, phone } = validation.data;
 
     // Check if email already exists
-    const exists = await emailExists(email);
+    const exists = await VolunteerRepository.emailExists(dbType, email);
     if (exists) {
       return NextResponse.json(
         {
@@ -41,7 +45,8 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hashPassword(password);
 
     // Create volunteer (default role is 'volunteer')
-    const volunteerId = await createVolunteer(
+    const volunteerId = await VolunteerRepository.createVolunteer(
+      dbType,
       name,
       email,
       passwordHash,

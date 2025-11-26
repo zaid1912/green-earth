@@ -2,27 +2,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, requireAdmin, getCurrentUser } from '@/lib/auth/middleware';
 import { createProjectSchema } from '@/lib/validations/schemas';
-import { getAllProjects, getAllProjectsWithJoinStatus, createProject, getProjectsByStatus, getProjectsByVolunteer } from '@/lib/db/queries/projects';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as ProjectRepository from '@/lib/db/repository/projects.repository';
 
 // GET /api/projects - Get all projects (or filter by status/volunteer)
 export async function GET(request: NextRequest) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') as 'planned' | 'active' | 'completed' | 'cancelled' | null;
     const volunteerId = searchParams.get('volunteerId');
 
     let projects;
     if (volunteerId) {
-      projects = await getProjectsByVolunteer(parseInt(volunteerId));
+      projects = await ProjectRepository.getProjectsByVolunteer(dbType, parseInt(volunteerId));
     } else if (status) {
-      projects = await getProjectsByStatus(status);
+      projects = await ProjectRepository.getProjectsByStatus(dbType, status);
     } else {
       // Check if user is authenticated to include join status
       const user = await getCurrentUser(request);
       if (user) {
-        projects = await getAllProjectsWithJoinStatus(user.volunteer_id);
+        projects = await ProjectRepository.getAllProjectsWithJoinStatus(dbType, user.volunteer_id);
       } else {
-        projects = await getAllProjects();
+        projects = await ProjectRepository.getAllProjects(dbType);
       }
     }
 
@@ -49,6 +53,9 @@ export async function GET(request: NextRequest) {
 // POST /api/projects - Create new project (admin only)
 export async function POST(request: NextRequest) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     // Require admin authentication
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) {
@@ -73,7 +80,8 @@ export async function POST(request: NextRequest) {
     const { orgId, name, description, startDate, endDate, status, location, maxVolunteers } = validation.data;
 
     // Create project
-    const projectId = await createProject(
+    const projectId = await ProjectRepository.createProject(
+      dbType,
       orgId,
       name,
       description,

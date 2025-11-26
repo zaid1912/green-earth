@@ -2,22 +2,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { createEventSchema } from '@/lib/validations/schemas';
-import { getAllEvents, getEventsByProject, getEventsForVolunteer, createEvent } from '@/lib/db/queries/events';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as EventRepository from '@/lib/db/repository/events.repository';
 
 // GET /api/events - Get all events (or filter by project/volunteer)
 export async function GET(request: NextRequest) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
     const volunteerId = searchParams.get('volunteerId');
 
     let events;
     if (volunteerId) {
-      events = await getEventsForVolunteer(parseInt(volunteerId));
+      events = await EventRepository.getEventsForVolunteer(dbType, parseInt(volunteerId));
     } else if (projectId) {
-      events = await getEventsByProject(parseInt(projectId));
+      events = await EventRepository.getEventsByProject(dbType, parseInt(projectId));
     } else {
-      events = await getAllEvents();
+      events = await EventRepository.getAllEvents(dbType);
     }
 
     return NextResponse.json(
@@ -49,6 +53,9 @@ export async function POST(request: NextRequest) {
       return authResult;
     }
 
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const body = await request.json();
 
     // Validate input
@@ -67,7 +74,8 @@ export async function POST(request: NextRequest) {
     const { projectId, name, description, eventDate, location, maxParticipants } = validation.data;
 
     // Create event
-    const eventId = await createEvent(
+    const eventId = await EventRepository.createEvent(
+      dbType,
       projectId,
       name,
       description,

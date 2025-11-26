@@ -1,7 +1,8 @@
 // Volunteer Dashboard API
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
-import { getVolunteerDashboardStats } from '@/lib/db/queries/dashboard';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as DashboardRepository from '@/lib/db/repository/dashboard.repository';
 
 // GET /api/dashboard/volunteer - Get volunteer dashboard statistics
 export async function GET(request: NextRequest) {
@@ -9,7 +10,10 @@ export async function GET(request: NextRequest) {
     const user = await requireAuth(request);
     if (user instanceof NextResponse) return user;
 
-    const stats = await getVolunteerDashboardStats(user.volunteer_id);
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
+    const stats = await DashboardRepository.getVolunteerDashboardStats(dbType, user.volunteer_id);
 
     return NextResponse.json({ success: true, data: stats }, { status: 200 });
   } catch (error: any) {

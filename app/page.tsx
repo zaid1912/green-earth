@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import DatabaseSelectorModal from '@/components/database-selector-modal';
 
 export default function HomePage() {
   const router = useRouter();
@@ -29,6 +30,9 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-green-50 to-white">
+      {/* Database Selection Modal */}
+      <DatabaseSelectorModal />
+
       {/* Hero Section */}
       <main className="flex flex-1 flex-col items-center justify-center px-4 text-center">
         <div className="max-w-3xl space-y-6">

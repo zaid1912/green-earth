@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { joinProjectSchema } from '@/lib/validations/schemas';
-import { joinProject } from '@/lib/db/queries/projects';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as ProjectRepository from '@/lib/db/repository/projects.repository';
 
 // POST /api/projects/[id]/join - Join a project (authenticated volunteers)
 export async function POST(
@@ -15,6 +16,10 @@ export async function POST(
     if (user instanceof NextResponse) {
       return user;
     }
+
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const projectId = parseInt(id);
 
@@ -37,7 +42,7 @@ export async function POST(
         {
           success: false,
           error: 'Validation failed',
-          details: validation.error.errors,
+          details: validation.error.issues,
         },
         { status: 400 }
       );
@@ -46,7 +51,7 @@ export async function POST(
     const { role } = validation.data;
 
     // Join project
-    const success = await joinProject(user.volunteer_id, projectId, role);
+    const success = await ProjectRepository.joinProject(dbType, user.volunteer_id, projectId, role);
 
     if (!success) {
       return NextResponse.json(

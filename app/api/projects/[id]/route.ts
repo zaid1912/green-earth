@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, requireAdmin } from '@/lib/auth/middleware';
 import { updateProjectSchema } from '@/lib/validations/schemas';
-import { getProjectById, updateProject, deleteProject } from '@/lib/db/queries/projects';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as ProjectRepository from '@/lib/db/repository/projects.repository';
 
 // GET /api/projects/[id] - Get single project
 export async function GET(
@@ -10,6 +11,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const projectId = parseInt(id);
 
@@ -23,7 +27,7 @@ export async function GET(
       );
     }
 
-    const project = await getProjectById(projectId);
+    const project = await ProjectRepository.getProjectById(dbType, projectId);
 
     if (!project) {
       return NextResponse.json(
@@ -67,6 +71,9 @@ export async function PUT(
       return authResult;
     }
 
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const projectId = parseInt(id);
 
@@ -89,7 +96,7 @@ export async function PUT(
         {
           success: false,
           error: 'Validation failed',
-          details: validation.error.errors,
+          details: validation.error.issues,
         },
         { status: 400 }
       );
@@ -107,7 +114,7 @@ export async function PUT(
     if (validation.data.location) updateData.location = validation.data.location;
     if (validation.data.maxVolunteers) updateData.maxVolunteers = validation.data.maxVolunteers;
 
-    const success = await updateProject(projectId, updateData);
+    const success = await ProjectRepository.updateProject(dbType, projectId, updateData);
 
     if (!success) {
       return NextResponse.json(
@@ -151,6 +158,9 @@ export async function DELETE(
       return authResult;
     }
 
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const projectId = parseInt(id);
 
@@ -164,7 +174,7 @@ export async function DELETE(
       );
     }
 
-    const success = await deleteProject(projectId);
+    const success = await ProjectRepository.deleteProject(dbType, projectId);
 
     if (!success) {
       return NextResponse.json(

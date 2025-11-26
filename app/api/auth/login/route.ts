@@ -1,13 +1,17 @@
 // Login Endpoint
 import { NextRequest, NextResponse } from 'next/server';
 import { loginSchema } from '@/lib/validations/schemas';
-import { getVolunteerByEmail } from '@/lib/db/queries/volunteers';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as VolunteerRepository from '@/lib/db/repository/volunteers.repository';
 import { comparePassword } from '@/lib/auth/password';
 import { signToken } from '@/lib/auth/jwt';
 import { setAuthCookie } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const body = await request.json();
 
     // Validate input
@@ -17,7 +21,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Validation failed',
-          details: validation.error.errors,
+          details: validation.error.issues,
         },
         { status: 400 }
       );
@@ -26,7 +30,7 @@ export async function POST(request: NextRequest) {
     const { email, password } = validation.data;
 
     // Get volunteer by email
-    const volunteer = await getVolunteerByEmail(email);
+    const volunteer = await VolunteerRepository.getVolunteerByEmail(dbType, email);
     if (!volunteer) {
       return NextResponse.json(
         {

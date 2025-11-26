@@ -1,10 +1,14 @@
 // Get Current User
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/middleware';
-import { getVolunteerById } from '@/lib/db/queries/volunteers';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as VolunteerRepository from '@/lib/db/repository/volunteers.repository';
 
 export async function GET(request: NextRequest) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     // Get current user from JWT
     const authUser = await getCurrentUser(request);
 
@@ -19,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get full volunteer details from database
-    const volunteer = await getVolunteerById(authUser.volunteer_id);
+    const volunteer = await VolunteerRepository.getVolunteerById(dbType, authUser.volunteer_id);
 
     if (!volunteer) {
       return NextResponse.json(
