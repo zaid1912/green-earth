@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { updateResourceSchema } from '@/lib/validations/schemas';
-import { getResourceById, updateResource, deleteResource } from '@/lib/db/queries/resources';
+import { getSelectedDatabaseFromRequest } from '@/lib/db/db-config';
+import * as ResourceRepository from '@/lib/db/repository/resources.repository';
 
 // GET /api/resources/[id] - Get single resource
 export async function GET(
@@ -10,6 +11,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const { id } = await params;
     const resourceId = parseInt(id);
     if (isNaN(resourceId)) {
@@ -19,7 +23,7 @@ export async function GET(
       );
     }
 
-    const resource = await getResourceById(resourceId);
+    const resource = await ResourceRepository.getResourceById(dbType, resourceId);
 
     if (!resource) {
       return NextResponse.json(
@@ -44,6 +48,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
@@ -71,7 +78,7 @@ export async function PUT(
     if (validation.data.quantity !== undefined) updateData.quantity = validation.data.quantity;
     if (validation.data.description !== undefined) updateData.description = validation.data.description;
 
-    const success = await updateResource(resourceId, updateData);
+    const success = await ResourceRepository.updateResource(dbType, resourceId, updateData);
 
     if (!success) {
       return NextResponse.json(
@@ -99,6 +106,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Get the selected database type from cookies
+    const dbType = getSelectedDatabaseFromRequest(request);
+
     const authResult = requireAdmin(request);
     if (authResult instanceof NextResponse) return authResult;
 
@@ -111,7 +121,7 @@ export async function DELETE(
       );
     }
 
-    const success = await deleteResource(resourceId);
+    const success = await ResourceRepository.deleteResource(dbType, resourceId);
 
     if (!success) {
       return NextResponse.json(
